@@ -192,7 +192,7 @@
                         input.inputMode = 'numeric';
                         input.name = `${name}-${year}`;
                         input.placeholder = '0';
-                        input.required = true;
+                        if (name === 'meeting1') { input.required = true; }
                         cell.appendChild(input);
                         row.appendChild(cell);
                     });
