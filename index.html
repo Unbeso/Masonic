@@ -192,6 +192,10 @@
             e.preventDefault();
 
             let overallTotals = {};
+            let combinedTotal = 0;
+            let combinedMeetingCount = 0;
+            let combinedSpecialEventTotal = 0;
+            let combinedSpecialEventCount = 0;
 
             const years = [...yearTablesContainer.querySelectorAll('h2')].map(h2 => parseInt(h2.textContent.replace('Year: ', '')));
 
@@ -219,6 +223,11 @@
                     }
                 });
 
+                combinedTotal += total;
+                combinedMeetingCount += meetingCount;
+                combinedSpecialEventTotal += specialEventTotal;
+                combinedSpecialEventCount += specialEventCount;
+
                 overallTotals[year] = { total, meetingCount, specialEventTotal, specialEventCount };
             });
 
@@ -238,6 +247,17 @@
                     <p>Total Attendance for Special Events: ${specialEventTotal}</p>
                 `;
             });
+
+            const combinedMonthlyAverage = combinedTotal / (years.length * 12);
+            const combinedPerMeetingAverage = combinedTotal / combinedMeetingCount;
+
+            resultHTML += `
+                <h3>Combined Data (All Years)</h3>
+                <p>Monthly Average Attendance Across All Years: ${combinedMonthlyAverage.toFixed(2)} people</p>
+                <p>Average Attendance Per Meeting Across All Years: ${combinedPerMeetingAverage.toFixed(2)} people</p>
+                <p>Total Special Events Across All Years: ${combinedSpecialEventCount}</p>
+                <p>Total Attendance for Special Events Across All Years: ${combinedSpecialEventTotal}</p>
+            `;
 
             resultElement.innerHTML = resultHTML;
         });
