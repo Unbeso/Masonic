@@ -246,9 +246,8 @@
             let meetingCount = 0;
             let specialEventTotal = 0;
             let specialEventCount = 0;
-            let totalPettyCash = 0;
+            const yearWisePettyCash = {};
             const monthlyTotals = Array(12).fill(0);
-            const pettyCashTotals = Array(12).fill(0);
             const data = {};
 
             const inputs = document.querySelectorAll('input[type="number"]');
@@ -266,9 +265,8 @@
                     specialEventTotal += value;
                     if (value > 0) specialEventCount++;
                 } else if (type === 'pettyCash') {
-                    const monthIndex = months.indexOf(month);
-                    if (monthIndex >= 0) pettyCashTotals[monthIndex] += value;
-                    totalPettyCash += value;
+                    if (!yearWisePettyCash[year]) yearWisePettyCash[year] = 0;
+                    yearWisePettyCash[year] += value;
                 }
             });
 
@@ -282,12 +280,17 @@
             const busiestMonths = months.filter((_, index) => monthlyTotals[index] === maxAttendance);
             const slowestMonths = months.filter((_, index) => monthlyTotals[index] === minAttendance);
 
+            let pettyCashReport = '';
+            for (const year in yearWisePettyCash) {
+                pettyCashReport += `<p>Petty Cash (${year}): $${yearWisePettyCash[year].toFixed(2)}</p>`;
+            }
+
             resultElement.innerHTML = `
                 <p>Monthly Average Attendance: ${monthlyAverage.toFixed(2)} people</p>
                 <p>Average Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people</p>
                 <p>Total Special Events: ${specialEventCount}</p>
                 <p>Total Attendance for Special Events: ${specialEventTotal}</p>
-                <p>Total Petty Cash Collected: $${totalPettyCash.toFixed(2)}</p>
+                ${pettyCashReport}
                 <p>Busiest Month(s): <span class="highlight">${busiestMonths.join(', ')}</span></p>
                 <p>Slowest Month(s): <span class="highlight">${slowestMonths.join(', ')}</span></p>
             `;
@@ -308,11 +311,6 @@
                             label: 'Monthly Attendance',
                             data: monthlyTotals,
                             backgroundColor: '#4CAF50',
-                        },
-                        {
-                            label: 'Petty Cash Collected ($)',
-                            data: pettyCashTotals,
-                            backgroundColor: '#FF5733',
                         }
                     ]
                 },
