@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Attendance Average Calculator</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Attendance Calculator">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        p {
+            text-align: center;
+            color: #666;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f7f7f7;
+        }
+        input[type="number"] {
+            width: 90%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            text-align: center;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Monthly Attendance Average Calculator</h1>
+        <p>Enter the number of attendees for each meeting to calculate the monthly and per-meeting averages.</p>
+
+        <form id="attendance-form">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Meeting 1 Attendance</th>
+                        <th>Meeting 2 Attendance</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-rows">
+                    <script>
+                        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                        months.forEach(month => {
+                            document.write(`
+                                <tr>
+                                    <td>${month}</td>
+                                    <td><input type="number" name="meeting1" placeholder="0" required></td>
+                                    <td><input type="number" name="meeting2" placeholder="0" required></td>
+                                </tr>
+                            `);
+                        });
+                    });
+                </tbody>
+            </table>
+            <button type="submit">Calculate Average</button>
+        </form>
+
+        <p class="result" id="average-result"></p>
+    </div>
+
+    <script>
+        const form = document.getElementById('attendance-form');
+        const resultElement = document.getElementById('average-result');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            // Collect attendance data
+            const meeting1Inputs = document.querySelectorAll('input[name="meeting1"]');
+            const meeting2Inputs = document.querySelectorAll('input[name="meeting2"]');
+            let total = 0;
+            let meetingCount = 0;
+
+            meeting1Inputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (!isNaN(value)) {
+                    total += value;
+                    meetingCount++;
+                }
+            });
+
+            meeting2Inputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (!isNaN(value)) {
+                    total += value;
+                    meetingCount++;
+                }
+            });
+
+            // Calculate averages
+            const monthlyAverage = total / 12;
+            const perMeetingAverage = total / meetingCount;
+
+            // Display result
+            resultElement.textContent = `Monthly Average Attendance: ${monthlyAverage.toFixed(2)} people \nAverage Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people`;
+        });
+
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+            }).catch(function(error) {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
+    </script>
+</body>
+</html>
