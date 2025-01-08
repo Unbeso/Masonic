@@ -61,6 +61,10 @@
         .hidden {
             display: none;
         }
+        .highlight {
+            font-weight: bold;
+            color: #e53935;
+        }
     </style>
 </head>
 <body>
@@ -223,11 +227,18 @@
             const monthlyAverage = total / 12;
             const perMeetingAverage = total / meetingCount;
 
+            const maxAttendance = Math.max(...monthlyTotals);
+            const minAttendance = Math.min(...monthlyTotals);
+            const busiestMonths = months.filter((_, index) => monthlyTotals[index] === maxAttendance);
+            const slowestMonths = months.filter((_, index) => monthlyTotals[index] === minAttendance);
+
             resultElement.innerHTML = `
                 <p>Monthly Average Attendance: ${monthlyAverage.toFixed(2)} people</p>
                 <p>Average Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people</p>
                 <p>Total Special Events: ${specialEventCount}</p>
                 <p>Total Attendance for Special Events: ${specialEventTotal}</p>
+                <p>Busiest Month(s): <span class="highlight">${busiestMonths.join(', ')}</span></p>
+                <p>Slowest Month(s): <span class="highlight">${slowestMonths.join(', ')}</span></p>
             `;
 
             resultElement.classList.remove('hidden');
