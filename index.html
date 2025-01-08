@@ -247,14 +247,13 @@
 
             if (chartInstance) chartInstance.destroy();
             chartInstance = new Chart(chartCanvas, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: months,
                     datasets: [{
                         label: 'Monthly Attendance',
                         data: monthlyTotals,
-                        borderColor: '#4CAF50',
-                        tension: 0.1
+                        backgroundColor: '#4CAF50',
                     }]
                 },
                 options: {
@@ -262,6 +261,11 @@
                     plugins: {
                         legend: {
                             display: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
                         }
                     }
                 }
