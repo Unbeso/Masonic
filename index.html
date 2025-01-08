@@ -158,6 +158,12 @@
             generateYearlyInputs(startYear, endYear);
             nextButton.classList.add('hidden');
             attendanceForm.classList.remove('hidden');
+
+            // Load data into the inputs if available
+            const savedData = loadDataLocally();
+            if (savedData) {
+                populateInputs(savedData);
+            }
         });
 
         function generateYearlyInputs(startYear, endYear) {
