@@ -111,6 +111,7 @@
         </div>
 
         <button id="export-button" class="hidden">Export to PDF</button>
+        <button id="clear-data-button" class="hidden">Clear Saved Data</button>
     </div>
 
     <script>
@@ -122,9 +123,28 @@
         const chartContainer = document.getElementById('chart-container');
         const chartCanvas = document.getElementById('attendance-chart');
         const exportButton = document.getElementById('export-button');
+        const clearDataButton = document.getElementById('clear-data-button');
         const startYearSelect = document.getElementById('start-year');
         const endYearSelect = document.getElementById('end-year');
         let chartInstance;
+
+        // Local Storage Functions
+        function saveDataLocally(data) {
+            localStorage.setItem('attendanceData', JSON.stringify(data));
+            alert('Data has been saved locally!');
+        }
+
+        function loadDataLocally() {
+            const savedData = localStorage.getItem('attendanceData');
+            return savedData ? JSON.parse(savedData) : null;
+        }
+
+        function populateInputs(data) {
+            for (const [key, value] of Object.entries(data)) {
+                const input = document.querySelector(`input[name="${key}"]`);
+                if (input) input.value = value;
+            }
+        }
 
         nextButton.addEventListener('click', () => {
             const startYear = parseInt(startYearSelect.value);
@@ -211,11 +231,13 @@
             let specialEventTotal = 0;
             let specialEventCount = 0;
             const monthlyTotals = Array(12).fill(0);
+            const data = {};
 
             const inputs = document.querySelectorAll('input[type="number"]');
             inputs.forEach(input => {
                 const value = parseInt(input.value) || 0;
                 const [type, year, month] = input.name.split('-');
+                data[input.name] = value;
 
                 if (type === 'meeting1' || type === 'meeting2') {
                     total += value;
@@ -227,6 +249,8 @@
                     if (value > 0) specialEventCount++;
                 }
             });
+
+            saveDataLocally(data);
 
             const monthlyAverage = total / 12;
             const perMeetingAverage = total / meetingCount;
@@ -248,6 +272,7 @@
             resultElement.classList.remove('hidden');
             chartContainer.classList.remove('hidden');
             exportButton.classList.remove('hidden');
+            clearDataButton.classList.remove('hidden');
 
             if (chartInstance) chartInstance.destroy();
             chartInstance = new Chart(chartCanvas, {
@@ -287,15 +312,24 @@
                 pdf.text(line, 10, 20 + index * 10);
             });
 
-            pdf.addPage();
+            const chartImage = chartCanvas.toDataURL('image/png');
+            pdf.addImage(chartImage, 'PNG', 10, 60, 190, 100);
 
-            pdf.html(chartContainer, {
-                callback: function (doc) {
-                    doc.save('attendance_report.pdf');
-                },
-                x: 10,
-                y: 10
-            });
+            pdf.save('attendance_report.pdf');
+        });
+
+        clearDataButton.addEventListener('click', () => {
+            localStorage.removeItem('attendanceData');
+            alert('Saved data has been cleared.');
+            location.reload();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = loadDataLocally();
+            if (savedData) {
+                populateInputs(savedData);
+                alert('Loaded saved data from local storage.');
+            }
         });
     </script>
 </body>
