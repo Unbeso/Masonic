@@ -104,18 +104,8 @@
                 </script>
             </select>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Month</th>
-                        <th>Meeting 1 Attendance</th>
-                        <th>Meeting 2 Attendance</th>
-                        <th>Special Event Attendance</th>
-                    </tr>
-                </thead>
-                <tbody id="attendance-rows">
-                </tbody>
-            </table>
+            <div id="yearly-attendance"></div>
+
             <button type="submit">Calculate Average</button>
         </form>
 
@@ -128,48 +118,90 @@
 
     <script>
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const tableBody = document.getElementById('attendance-rows');
+        const yearlyAttendance = document.getElementById('yearly-attendance');
         const resultElement = document.getElementById('average-result');
         const startYearSelect = document.getElementById('start-year');
         const endYearSelect = document.getElementById('end-year');
         const chartCanvas = document.getElementById('attendance-chart');
         let chartInstance;
 
-        months.forEach(month => {
-            const row = document.createElement('tr');
+        function generateYearlyInputs(startYear, endYear) {
+            yearlyAttendance.innerHTML = '';
+            for (let year = startYear; year <= endYear; year++) {
+                const yearContainer = document.createElement('div');
+                yearContainer.classList.add('year-container');
+                yearContainer.innerHTML = `<h3>Year: ${year}</h3>`;
 
-            const monthCell = document.createElement('td');
-            monthCell.textContent = month;
-            row.appendChild(monthCell);
+                const table = document.createElement('table');
+                table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Meeting 1 Attendance</th>
+                            <th>Meeting 2 Attendance</th>
+                            <th>Special Event Attendance</th>
+                        </tr>
+                    </thead>
+                `;
 
-            const meeting1Cell = document.createElement('td');
-            const meeting1Input = document.createElement('input');
-            meeting1Input.type = 'number';
-            meeting1Input.inputMode = 'numeric';
-            meeting1Input.name = 'meeting1';
-            meeting1Input.placeholder = '0';
-            meeting1Cell.appendChild(meeting1Input);
-            row.appendChild(meeting1Cell);
+                const tbody = document.createElement('tbody');
+                months.forEach(month => {
+                    const row = document.createElement('tr');
 
-            const meeting2Cell = document.createElement('td');
-            const meeting2Input = document.createElement('input');
-            meeting2Input.type = 'number';
-            meeting2Input.inputMode = 'numeric';
-            meeting2Input.name = 'meeting2';
-            meeting2Input.placeholder = '0';
-            meeting2Cell.appendChild(meeting2Input);
-            row.appendChild(meeting2Cell);
+                    const monthCell = document.createElement('td');
+                    monthCell.textContent = month;
+                    row.appendChild(monthCell);
 
-            const specialEventCell = document.createElement('td');
-            const specialEventInput = document.createElement('input');
-            specialEventInput.type = 'number';
-            specialEventInput.inputMode = 'numeric';
-            specialEventInput.name = 'specialEvent';
-            specialEventInput.placeholder = '0';
-            specialEventCell.appendChild(specialEventInput);
-            row.appendChild(specialEventCell);
+                    const meeting1Cell = document.createElement('td');
+                    const meeting1Input = document.createElement('input');
+                    meeting1Input.type = 'number';
+                    meeting1Input.inputMode = 'numeric';
+                    meeting1Input.name = `meeting1-${year}-${month}`;
+                    meeting1Input.placeholder = '0';
+                    meeting1Cell.appendChild(meeting1Input);
+                    row.appendChild(meeting1Cell);
 
-            tableBody.appendChild(row);
+                    const meeting2Cell = document.createElement('td');
+                    const meeting2Input = document.createElement('input');
+                    meeting2Input.type = 'number';
+                    meeting2Input.inputMode = 'numeric';
+                    meeting2Input.name = `meeting2-${year}-${month}`;
+                    meeting2Input.placeholder = '0';
+                    meeting2Cell.appendChild(meeting2Input);
+                    row.appendChild(meeting2Cell);
+
+                    const specialEventCell = document.createElement('td');
+                    const specialEventInput = document.createElement('input');
+                    specialEventInput.type = 'number';
+                    specialEventInput.inputMode = 'numeric';
+                    specialEventInput.name = `specialEvent-${year}-${month}`;
+                    specialEventInput.placeholder = '0';
+                    specialEventCell.appendChild(specialEventInput);
+                    row.appendChild(specialEventCell);
+
+                    tbody.appendChild(row);
+                });
+
+                table.appendChild(tbody);
+                yearContainer.appendChild(table);
+                yearlyAttendance.appendChild(yearContainer);
+            }
+        }
+
+        startYearSelect.addEventListener('change', () => {
+            const startYear = parseInt(startYearSelect.value);
+            const endYear = parseInt(endYearSelect.value);
+            if (!isNaN(startYear) && !isNaN(endYear) && startYear <= endYear) {
+                generateYearlyInputs(startYear, endYear);
+            }
+        });
+
+        endYearSelect.addEventListener('change', () => {
+            const startYear = parseInt(startYearSelect.value);
+            const endYear = parseInt(endYearSelect.value);
+            if (!isNaN(startYear) && !isNaN(endYear) && startYear <= endYear) {
+                generateYearlyInputs(startYear, endYear);
+            }
         });
 
         document.getElementById('attendance-form').addEventListener('submit', (e) => {
@@ -183,41 +215,25 @@
                 return;
             }
 
-            const meeting1Inputs = document.querySelectorAll('input[name="meeting1"]');
-            const meeting2Inputs = document.querySelectorAll('input[name="meeting2"]');
-            const specialEventInputs = document.querySelectorAll('input[name="specialEvent"]');
-
             let total = 0;
             let meetingCount = 0;
             let specialEventTotal = 0;
             let specialEventCount = 0;
             const monthlyTotals = Array(12).fill(0);
 
-            meeting1Inputs.forEach((input, index) => {
-                const value = parseInt(input.value);
-                if (!isNaN(value)) {
-                    total += value;
-                    meetingCount++;
-                    monthlyTotals[index % 12] += value;
-                }
-            });
+            for (let year = startYear; year <= endYear; year++) {
+                months.forEach((month, index) => {
+                    const meeting1Value = parseInt(document.querySelector(`input[name="meeting1-${year}-${month}"]`)?.value) || 0;
+                    const meeting2Value = parseInt(document.querySelector(`input[name="meeting2-${year}-${month}"]`)?.value) || 0;
+                    const specialEventValue = parseInt(document.querySelector(`input[name="specialEvent-${year}-${month}"]`)?.value) || 0;
 
-            meeting2Inputs.forEach((input, index) => {
-                const value = parseInt(input.value);
-                if (!isNaN(value)) {
-                    total += value;
-                    meetingCount++;
-                    monthlyTotals[index % 12] += value;
-                }
-            });
-
-            specialEventInputs.forEach(input => {
-                const value = parseInt(input.value);
-                if (!isNaN(value) && value > 0) {
-                    specialEventTotal += value;
-                    specialEventCount++;
-                }
-            });
+                    total += meeting1Value + meeting2Value;
+                    meetingCount += (meeting1Value > 0) + (meeting2Value > 0);
+                    specialEventTotal += specialEventValue;
+                    specialEventCount += specialEventValue > 0 ? 1 : 0;
+                    monthlyTotals[index % 12] += meeting1Value + meeting2Value;
+                });
+            }
 
             const monthlyAverage = total / 12;
             const perMeetingAverage = total / meetingCount;
