@@ -10,7 +10,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Attendance Calculator">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsPDF@2.5.1"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -110,7 +109,8 @@
             <canvas id="attendance-chart"></canvas>
         </div>
 
-        <button id="export-button" class="hidden">Export to PDF</button>
+        <button id="export-json-button" class="hidden">Export Data (JSON)</button>
+        <button id="import-json-button" class="hidden">Import Data (JSON)</button>
         <button id="clear-data-button" class="hidden">Clear Saved Data</button>
     </div>
 
@@ -122,7 +122,8 @@
         const resultElement = document.getElementById('average-result');
         const chartContainer = document.getElementById('chart-container');
         const chartCanvas = document.getElementById('attendance-chart');
-        const exportButton = document.getElementById('export-button');
+        const exportJsonButton = document.getElementById('export-json-button');
+        const importJsonButton = document.getElementById('import-json-button');
         const clearDataButton = document.getElementById('clear-data-button');
         const startYearSelect = document.getElementById('start-year');
         const endYearSelect = document.getElementById('end-year');
@@ -276,7 +277,8 @@
 
             resultElement.classList.remove('hidden');
             chartContainer.classList.remove('hidden');
-            exportButton.classList.remove('hidden');
+            exportJsonButton.classList.remove('hidden');
+            importJsonButton.classList.remove('hidden');
             clearDataButton.classList.remove('hidden');
 
             if (chartInstance) chartInstance.destroy();
@@ -306,26 +308,42 @@
             });
         });
 
-        exportButton.addEventListener('click', () => {
-            const pdf = new jsPDF();
+        exportJsonButton.addEventListener('click', () => {
+            const dataToExport = {
+                attendanceData: loadDataLocally(),
+                chartData: chartInstance.data.datasets[0].data
+            };
 
-            pdf.setFontSize(16);
-            pdf.text('Attendance Report', 10, 10);
+            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
 
-            const resultText = resultElement.innerText.split('\n');
-            resultText.forEach((line, index) => {
-                pdf.text(line, 10, 20 + index * 10);
-            });
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'attendance_data.json';
+            a.click();
 
-            chartCanvas.toBlob((blob) => {
+            URL.revokeObjectURL(url);
+        });
+
+        importJsonButton.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+
+            input.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
                 const reader = new FileReader();
-                reader.onload = function(event) {
-                    const chartImage = event.target.result;
-                    pdf.addImage(chartImage, 'PNG', 10, 60, 190, 100);
-                    pdf.save('attendance_report.pdf');
+                reader.onload = (e) => {
+                    const importedData = JSON.parse(e.target.result);
+                    saveDataLocally(importedData.attendanceData);
+                    location.reload();
                 };
-                reader.readAsDataURL(blob);
+                reader.readAsText(file);
             });
+
+            input.click();
         });
 
         clearDataButton.addEventListener('click', () => {
