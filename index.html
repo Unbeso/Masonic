@@ -89,10 +89,7 @@
 
         <form id="attendance-form">
             <label for="year-selector">Select Year:</label>
-            <select id="year-selector">
-                <option value="2023">2023</option>
-                <option value="2024">2024</option>
-            </select>
+            <select id="year-selector"></select>
 
             <table>
                 <thead>
@@ -113,6 +110,16 @@
     </div>
 
     <script>
+        // Dynamically populate the year selector
+        const yearSelector = document.getElementById('year-selector');
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearSelector.appendChild(option);
+        }
+
         // Dynamically populate the table with months and input fields
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const tableBody = document.getElementById('attendance-rows');
