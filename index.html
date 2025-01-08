@@ -74,18 +74,30 @@
             color: #4CAF50;
             margin-top: 20px;
         }
+        #chart-container {
+            margin-top: 40px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Monthly Attendance Average Calculator</h1>
-        <p>Enter the number of attendees for each meeting and any special events to calculate averages.</p>
+        <p>Enter the number of attendees for each meeting and any special events to calculate averages for two years.</p>
 
         <form id="attendance-form">
-            <label for="year">Select Year:</label>
-            <select id="year" name="year" required>
+            <label for="start-year">Select Start Year:</label>
+            <select id="start-year" name="start-year" required>
                 <script>
                     const currentYear = new Date().getFullYear();
+                    for (let year = currentYear - 10; year <= currentYear + 10; year++) {
+                        document.write(`<option value="${year}">${year}</option>`);
+                    }
+                </script>
+            </select>
+
+            <label for="end-year">Select End Year:</label>
+            <select id="end-year" name="end-year" required>
+                <script>
                     for (let year = currentYear - 10; year <= currentYear + 10; year++) {
                         document.write(`<option value="${year}">${year}</option>`);
                     }
@@ -108,12 +120,20 @@
         </form>
 
         <p class="result" id="average-result"></p>
+
+        <div id="chart-container">
+            <canvas id="attendance-chart"></canvas>
+        </div>
     </div>
 
     <script>
-        // Dynamically populate the table with months and input fields
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
         const tableBody = document.getElementById('attendance-rows');
+        const resultElement = document.getElementById('average-result');
+        const startYearSelect = document.getElementById('start-year');
+        const endYearSelect = document.getElementById('end-year');
+        const chartCanvas = document.getElementById('attendance-chart');
+        let chartInstance;
 
         months.forEach(month => {
             const row = document.createElement('tr');
@@ -128,7 +148,6 @@
             meeting1Input.inputMode = 'numeric';
             meeting1Input.name = 'meeting1';
             meeting1Input.placeholder = '0';
-            meeting1Input.required = true;
             meeting1Cell.appendChild(meeting1Input);
             row.appendChild(meeting1Cell);
 
@@ -153,36 +172,42 @@
             tableBody.appendChild(row);
         });
 
-        const form = document.getElementById('attendance-form');
-        const resultElement = document.getElementById('average-result');
-
-        form.addEventListener('submit', (e) => {
+        document.getElementById('attendance-form').addEventListener('submit', (e) => {
             e.preventDefault();
 
-            // Collect attendance data
+            const startYear = parseInt(startYearSelect.value);
+            const endYear = parseInt(endYearSelect.value);
+
+            if (isNaN(startYear) || isNaN(endYear) || startYear > endYear) {
+                alert('Please select valid start and end years.');
+                return;
+            }
+
             const meeting1Inputs = document.querySelectorAll('input[name="meeting1"]');
             const meeting2Inputs = document.querySelectorAll('input[name="meeting2"]');
             const specialEventInputs = document.querySelectorAll('input[name="specialEvent"]');
 
             let total = 0;
             let meetingCount = 0;
-
             let specialEventTotal = 0;
             let specialEventCount = 0;
+            const monthlyTotals = Array(12).fill(0);
 
-            meeting1Inputs.forEach(input => {
+            meeting1Inputs.forEach((input, index) => {
                 const value = parseInt(input.value);
                 if (!isNaN(value)) {
                     total += value;
                     meetingCount++;
+                    monthlyTotals[index % 12] += value;
                 }
             });
 
-            meeting2Inputs.forEach(input => {
+            meeting2Inputs.forEach((input, index) => {
                 const value = parseInt(input.value);
                 if (!isNaN(value)) {
                     total += value;
                     meetingCount++;
+                    monthlyTotals[index % 12] += value;
                 }
             });
 
@@ -194,27 +219,38 @@
                 }
             });
 
-            // Calculate averages
             const monthlyAverage = total / 12;
             const perMeetingAverage = total / meetingCount;
 
-            // Display result
             resultElement.innerHTML = `
                 <p>Monthly Average Attendance: ${monthlyAverage.toFixed(2)} people</p>
                 <p>Average Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people</p>
                 <p>Total Special Events: ${specialEventCount}</p>
                 <p>Total Attendance for Special Events: ${specialEventTotal}</p>
             `;
-        });
 
-        // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').then(function(registration) {
-                console.log('Service Worker registered with scope:', registration.scope);
-            }).catch(function(error) {
-                console.log('Service Worker registration failed:', error);
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(chartCanvas, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Monthly Attendance',
+                        data: monthlyTotals,
+                        borderColor: '#4CAF50',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
             });
-        }
+        });
     </script>
 </body>
 </html>
