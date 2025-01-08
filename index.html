@@ -125,6 +125,7 @@
         const chartCanvas = document.getElementById('attendance-chart');
 
         let chartInstance;
+        let exportedData = [];
 
         // Populate year dropdowns
         const currentYear = new Date().getFullYear();
@@ -148,61 +149,10 @@
                 return;
             }
 
-            yearTablesContainer.innerHTML = '';
-
             const years = [];
             for (let year = yearStart; year <= yearEnd; year++) {
                 years.push(year);
             }
-
-            years.forEach(year => {
-                // Create year heading
-                const yearHeading = document.createElement('h2');
-                yearHeading.textContent = `Year: ${year}`;
-                yearTablesContainer.appendChild(yearHeading);
-
-                // Create table
-                const table = document.createElement('table');
-                const thead = document.createElement('thead');
-                const tbody = document.createElement('tbody');
-
-                // Add table headers
-                thead.innerHTML = `
-                    <tr>
-                        <th>Month</th>
-                        <th>Meeting 1 Attendance</th>
-                        <th>Meeting 2 Attendance</th>
-                        <th>Special Event Attendance</th>
-                    </tr>
-                `;
-
-                // Add rows for each month
-                months.forEach(month => {
-                    const row = document.createElement('tr');
-
-                    const monthCell = document.createElement('td');
-                    monthCell.textContent = month;
-                    row.appendChild(monthCell);
-
-                    ["meeting1", "meeting2", "specialEvent"].forEach(name => {
-                        const cell = document.createElement('td');
-                        const input = document.createElement('input');
-                        input.type = 'number';
-                        input.inputMode = 'numeric';
-                        input.name = `${name}-${year}`;
-                        input.placeholder = '0';
-                        if (name === 'meeting1') { input.required = true; }
-                        cell.appendChild(input);
-                        row.appendChild(cell);
-                    });
-
-                    tbody.appendChild(row);
-                });
-
-                table.appendChild(thead);
-                table.appendChild(tbody);
-                yearTablesContainer.appendChild(table);
-            });
 
             calculateAverages(years);
         });
@@ -210,6 +160,7 @@
         function calculateAverages(years) {
             let overallTotals = {};
             let monthlyTotals = Array(12).fill(0);
+            exportedData = [];
 
             years.forEach(year => {
                 let total = 0;
@@ -234,6 +185,15 @@
                         specialEventTotal += specialEventValue;
                         specialEventCount++;
                     }
+
+                    // Prepare data for export
+                    exportedData.push({
+                        year,
+                        month,
+                        meeting1Attendance: meeting1Value,
+                        meeting2Attendance: meeting2Value,
+                        specialEventAttendance: specialEventValue
+                    });
                 });
 
                 overallTotals[year] = { total, meetingCount, specialEventTotal, specialEventCount };
@@ -246,3 +206,69 @@
                 data: {
                     labels: months,
                     datasets: [{
+                        label: 'Monthly Attendance',
+                        data: monthlyTotals,
+                        borderColor: '#4CAF50',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    }
+                }
+            });
+
+            exportButton.style.display = 'block';
+
+            // Show results
+            displayResults(overallTotals);
+        }
+
+        function displayResults(totals) {
+            let resultHTML = '';
+            for (const [year, data] of Object.entries(totals)) {
+                const { total, meetingCount, specialEventTotal, specialEventCount } = data;
+                const monthlyAverage = total / 12;
+                const perMeetingAverage = total / meetingCount;
+
+                resultHTML += `
+                    <h3>Year: ${year}</h3>
+                    <p>Monthly Average Attendance: ${monthlyAverage.toFixed(2)} people</p>
+                    <p>Average Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people</p>
+                    <p>Total Special Events: ${specialEventCount}</p>
+                    <p>Total Attendance for Special Events: ${specialEventTotal}</p>
+                `;
+            }
+            resultElement.innerHTML = resultHTML;
+        }
+
+        exportButton.addEventListener('click', () => {
+            const csvData = [
+                ['Year', 'Month', 'Meeting 1 Attendance', 'Meeting 2 Attendance', 'Special Event Attendance']
+            ];
+            exportedData.forEach(data => {
+                csvData.push([data.year, data.month, data.meeting1Attendance, data.meeting2Attendance, data.specialEventAttendance]);
+            });
+
+            // Validate csvData
+            if (csvData.length <= 1) {
+                alert('No data available to export. Please calculate averages first.');
+                return;
+            }
+
+            const csvContent = csvData.map(row => row.join(",")).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'attendance_data.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
