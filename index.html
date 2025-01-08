@@ -131,7 +131,6 @@
         // Local Storage Functions
         function saveDataLocally(data) {
             localStorage.setItem('attendanceData', JSON.stringify(data));
-            alert('Data has been saved locally!');
         }
 
         function loadDataLocally() {
@@ -331,7 +330,6 @@
 
         clearDataButton.addEventListener('click', () => {
             localStorage.removeItem('attendanceData');
-            alert('Saved data has been cleared.');
             location.reload();
         });
 
@@ -339,7 +337,6 @@
             const savedData = loadDataLocally();
             if (savedData) {
                 populateInputs(savedData);
-                alert('Loaded saved data from local storage.');
             }
         });
     </script>
