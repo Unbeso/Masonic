@@ -46,7 +46,14 @@
         th {
             background-color: #f7f7f7;
         }
-        input[type="number"], input[type="date"] {
+        select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
+        input[type="number"] {
             width: 90%;
             padding: 5px;
             border: 1px solid #ccc;
@@ -82,10 +89,10 @@
 
         <form id="attendance-form">
             <label for="year-start">Select Start Year:</label>
-            <input type="date" id="year-start" name="year-start" required>
+            <select id="year-start" name="year-start" required></select>
 
             <label for="year-end">Select End Year:</label>
-            <input type="date" id="year-end" name="year-end" required>
+            <select id="year-end" name="year-end" required></select>
 
             <div id="year-tables"></div>
             <button type="submit">Calculate Averages</button>
@@ -99,14 +106,25 @@
         const yearTablesContainer = document.getElementById('year-tables');
         const form = document.getElementById('attendance-form');
         const resultElement = document.getElementById('average-result');
+        const yearStartSelect = document.getElementById('year-start');
+        const yearEndSelect = document.getElementById('year-end');
+
+        // Populate year dropdowns
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
+            const startOption = document.createElement('option');
+            const endOption = document.createElement('option');
+            startOption.value = endOption.value = year;
+            startOption.textContent = endOption.textContent = year;
+            yearStartSelect.appendChild(startOption);
+            yearEndSelect.appendChild(endOption);
+        }
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const yearStartInput = document.getElementById('year-start');
-            const yearEndInput = document.getElementById('year-end');
-            const yearStart = new Date(yearStartInput.value).getFullYear();
-            const yearEnd = new Date(yearEndInput.value).getFullYear();
+            const yearStart = parseInt(yearStartSelect.value);
+            const yearEnd = parseInt(yearEndSelect.value);
 
             if (isNaN(yearStart) || isNaN(yearEnd) || yearStart > yearEnd) {
                 alert('Please select valid start and end years.');
