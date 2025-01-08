@@ -47,13 +47,6 @@
         th {
             background-color: #f7f7f7;
         }
-        select {
-            width: 100%;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            text-align: center;
-        }
         input[type="number"] {
             width: 90%;
             padding: 5px;
@@ -81,194 +74,147 @@
             color: #4CAF50;
             margin-top: 20px;
         }
-        #chart-container {
-            margin-top: 40px;
-        }
-        #export-data {
-            display: none;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Monthly Attendance Average Calculator</h1>
-        <p>Enter the number of attendees for each meeting and any special events to calculate averages for both years.</p>
+        <p>Enter the number of attendees for each meeting and any special events to calculate averages.</p>
 
         <form id="attendance-form">
-            <label for="year-start">Select Start Year:</label>
-            <select id="year-start" name="year-start" required></select>
+            <label for="year">Select Year:</label>
+            <select id="year" name="year" required>
+                <script>
+                    const currentYear = new Date().getFullYear();
+                    for (let year = currentYear - 10; year <= currentYear + 10; year++) {
+                        document.write(`<option value="${year}">${year}</option>`);
+                    }
+                </script>
+            </select>
 
-            <label for="year-end">Select End Year:</label>
-            <select id="year-end" name="year-end" required></select>
-
-            <div id="year-tables"></div>
-            <button type="submit">Calculate Averages</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Meeting 1 Attendance</th>
+                        <th>Meeting 2 Attendance</th>
+                        <th>Special Event Attendance</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-rows">
+                </tbody>
+            </table>
+            <button type="submit">Calculate Average</button>
         </form>
 
         <p class="result" id="average-result"></p>
-
-        <button id="export-data">Export Data as CSV</button>
-
-        <div id="chart-container">
-            <canvas id="attendance-chart"></canvas>
-        </div>
     </div>
 
     <script>
+        // Dynamically populate the table with months and input fields
         const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        const yearTablesContainer = document.getElementById('year-tables');
+        const tableBody = document.getElementById('attendance-rows');
+
+        months.forEach(month => {
+            const row = document.createElement('tr');
+
+            const monthCell = document.createElement('td');
+            monthCell.textContent = month;
+            row.appendChild(monthCell);
+
+            const meeting1Cell = document.createElement('td');
+            const meeting1Input = document.createElement('input');
+            meeting1Input.type = 'number';
+            meeting1Input.inputMode = 'numeric';
+            meeting1Input.name = 'meeting1';
+            meeting1Input.placeholder = '0';
+            meeting1Input.required = true;
+            meeting1Cell.appendChild(meeting1Input);
+            row.appendChild(meeting1Cell);
+
+            const meeting2Cell = document.createElement('td');
+            const meeting2Input = document.createElement('input');
+            meeting2Input.type = 'number';
+            meeting2Input.inputMode = 'numeric';
+            meeting2Input.name = 'meeting2';
+            meeting2Input.placeholder = '0';
+            meeting2Cell.appendChild(meeting2Input);
+            row.appendChild(meeting2Cell);
+
+            const specialEventCell = document.createElement('td');
+            const specialEventInput = document.createElement('input');
+            specialEventInput.type = 'number';
+            specialEventInput.inputMode = 'numeric';
+            specialEventInput.name = 'specialEvent';
+            specialEventInput.placeholder = '0';
+            specialEventCell.appendChild(specialEventInput);
+            row.appendChild(specialEventCell);
+
+            tableBody.appendChild(row);
+        });
+
         const form = document.getElementById('attendance-form');
         const resultElement = document.getElementById('average-result');
-        const yearStartSelect = document.getElementById('year-start');
-        const yearEndSelect = document.getElementById('year-end');
-        const exportButton = document.getElementById('export-data');
-        const chartCanvas = document.getElementById('attendance-chart');
-
-        let chartInstance;
-        let exportedData = [];
-
-        // Populate year dropdowns
-        const currentYear = new Date().getFullYear();
-        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
-            const startOption = document.createElement('option');
-            const endOption = document.createElement('option');
-            startOption.value = endOption.value = year;
-            startOption.textContent = endOption.textContent = year;
-            yearStartSelect.appendChild(startOption);
-            yearEndSelect.appendChild(endOption);
-        }
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const yearStart = parseInt(yearStartSelect.value);
-            const yearEnd = parseInt(yearEndSelect.value);
+            // Collect attendance data
+            const meeting1Inputs = document.querySelectorAll('input[name="meeting1"]');
+            const meeting2Inputs = document.querySelectorAll('input[name="meeting2"]');
+            const specialEventInputs = document.querySelectorAll('input[name="specialEvent"]');
 
-            if (isNaN(yearStart) || isNaN(yearEnd) || yearStart > yearEnd) {
-                alert('Please select valid start and end years.');
-                return;
-            }
+            let total = 0;
+            let meetingCount = 0;
 
-            const years = [];
-            for (let year = yearStart; year <= yearEnd; year++) {
-                years.push(year);
-            }
+            let specialEventTotal = 0;
+            let specialEventCount = 0;
 
-            calculateAverages(years);
-        });
-
-        function calculateAverages(years) {
-            let overallTotals = {};
-            let monthlyTotals = Array(12).fill(0);
-            exportedData = [];
-
-            years.forEach(year => {
-                let total = 0;
-                let meetingCount = 0;
-                let specialEventTotal = 0;
-                let specialEventCount = 0;
-
-                months.forEach((month, index) => {
-                    const meeting1Input = document.querySelector(`input[name="meeting1-${year}"]`);
-                    const meeting2Input = document.querySelector(`input[name="meeting2-${year}"]`);
-                    const specialEventInput = document.querySelector(`input[name="specialEvent-${year}"]`);
-
-                    const meeting1Value = parseInt(meeting1Input?.value) || 0;
-                    const meeting2Value = parseInt(meeting2Input?.value) || 0;
-                    const specialEventValue = parseInt(specialEventInput?.value) || 0;
-
-                    total += meeting1Value + meeting2Value;
-                    monthlyTotals[index] += meeting1Value + meeting2Value;
-                    meetingCount += 2; // Two meetings per month
-
-                    if (specialEventValue > 0) {
-                        specialEventTotal += specialEventValue;
-                        specialEventCount++;
-                    }
-
-                    // Prepare data for export
-                    exportedData.push({
-                        year,
-                        month,
-                        meeting1Attendance: meeting1Value,
-                        meeting2Attendance: meeting2Value,
-                        specialEventAttendance: specialEventValue
-                    });
-                });
-
-                overallTotals[year] = { total, meetingCount, specialEventTotal, specialEventCount };
-            });
-
-            // Generate line chart
-            if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(chartCanvas, {
-                type: 'line',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'Monthly Attendance',
-                        data: monthlyTotals,
-                        borderColor: '#4CAF50',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    }
+            meeting1Inputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (!isNaN(value)) {
+                    total += value;
+                    meetingCount++;
                 }
             });
 
-            exportButton.style.display = 'block';
-
-            // Show results
-            displayResults(overallTotals);
-        }
-
-        function displayResults(totals) {
-            let resultHTML = '';
-            for (const [year, data] of Object.entries(totals)) {
-                const { total, meetingCount, specialEventTotal, specialEventCount } = data;
-                const monthlyAverage = total / 12;
-                const perMeetingAverage = total / meetingCount;
-
-                resultHTML += `
-                    <h3>Year: ${year}</h3>
-                    <p>Monthly Average Attendance: ${monthlyAverage.toFixed(2)} people</p>
-                    <p>Average Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people</p>
-                    <p>Total Special Events: ${specialEventCount}</p>
-                    <p>Total Attendance for Special Events: ${specialEventTotal}</p>
-                `;
-            }
-            resultElement.innerHTML = resultHTML;
-        }
-
-        exportButton.addEventListener('click', () => {
-            const csvData = [
-                ['Year', 'Month', 'Meeting 1 Attendance', 'Meeting 2 Attendance', 'Special Event Attendance']
-            ];
-            exportedData.forEach(data => {
-                csvData.push([data.year, data.month, data.meeting1Attendance, data.meeting2Attendance, data.specialEventAttendance]);
+            meeting2Inputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (!isNaN(value)) {
+                    total += value;
+                    meetingCount++;
+                }
             });
 
-            // Validate csvData
-            if (csvData.length <= 1) {
-                alert('No data available to export. Please calculate averages first.');
-                return;
-            }
+            specialEventInputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (!isNaN(value) && value > 0) {
+                    specialEventTotal += value;
+                    specialEventCount++;
+                }
+            });
 
-            const csvContent = csvData.map(row => row.join(",")).join("\n");
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'attendance_data.csv';
-            a.click();
-            URL.revokeObjectURL(url);
+            // Calculate averages
+            const monthlyAverage = total / 12;
+            const perMeetingAverage = total / meetingCount;
+
+            // Display result
+            resultElement.innerHTML = `
+                <p>Monthly Average Attendance: ${monthlyAverage.toFixed(2)} people</p>
+                <p>Average Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people</p>
+                <p>Total Special Events: ${specialEventCount}</p>
+                <p>Total Attendance for Special Events: ${specialEventTotal}</p>
+            `;
         });
+
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').then(function(registration) {
+                console.log('Service Worker registered with scope:', registration.scope);
+            }).catch(function(error) {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
     </script>
 </body>
 </html>
