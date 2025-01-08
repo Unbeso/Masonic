@@ -181,6 +181,7 @@
                             <th>Meeting 1 Attendance</th>
                             <th>Meeting 2 Attendance</th>
                             <th>Special Event Attendance</th>
+                            <th>Petty Cash Collection ($)</th>
                         </tr>
                     </thead>
                 `;
@@ -220,6 +221,15 @@
                     specialEventCell.appendChild(specialEventInput);
                     row.appendChild(specialEventCell);
 
+                    const pettyCashCell = document.createElement('td');
+                    const pettyCashInput = document.createElement('input');
+                    pettyCashInput.type = 'number';
+                    pettyCashInput.inputMode = 'numeric';
+                    pettyCashInput.name = `pettyCash-${year}-${month}`;
+                    pettyCashInput.placeholder = '0';
+                    pettyCashCell.appendChild(pettyCashInput);
+                    row.appendChild(pettyCashCell);
+
                     tbody.appendChild(row);
                 });
 
@@ -236,7 +246,9 @@
             let meetingCount = 0;
             let specialEventTotal = 0;
             let specialEventCount = 0;
+            let totalPettyCash = 0;
             const monthlyTotals = Array(12).fill(0);
+            const pettyCashTotals = Array(12).fill(0);
             const data = {};
 
             const inputs = document.querySelectorAll('input[type="number"]');
@@ -253,6 +265,10 @@
                 } else if (type === 'specialEvent') {
                     specialEventTotal += value;
                     if (value > 0) specialEventCount++;
+                } else if (type === 'pettyCash') {
+                    const monthIndex = months.indexOf(month);
+                    if (monthIndex >= 0) pettyCashTotals[monthIndex] += value;
+                    totalPettyCash += value;
                 }
             });
 
@@ -271,6 +287,7 @@
                 <p>Average Attendance Per Meeting: ${perMeetingAverage.toFixed(2)} people</p>
                 <p>Total Special Events: ${specialEventCount}</p>
                 <p>Total Attendance for Special Events: ${specialEventTotal}</p>
+                <p>Total Petty Cash Collected: $${totalPettyCash.toFixed(2)}</p>
                 <p>Busiest Month(s): <span class="highlight">${busiestMonths.join(', ')}</span></p>
                 <p>Slowest Month(s): <span class="highlight">${slowestMonths.join(', ')}</span></p>
             `;
@@ -286,11 +303,18 @@
                 type: 'bar',
                 data: {
                     labels: months,
-                    datasets: [{
-                        label: 'Monthly Attendance',
-                        data: monthlyTotals,
-                        backgroundColor: '#4CAF50',
-                    }]
+                    datasets: [
+                        {
+                            label: 'Monthly Attendance',
+                            data: monthlyTotals,
+                            backgroundColor: '#4CAF50',
+                        },
+                        {
+                            label: 'Petty Cash Collected ($)',
+                            data: pettyCashTotals,
+                            backgroundColor: '#FF5733',
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -311,7 +335,7 @@
         exportJsonButton.addEventListener('click', () => {
             const dataToExport = {
                 attendanceData: loadDataLocally(),
-                chartData: chartInstance.data.datasets[0].data
+                chartData: chartInstance.data.datasets.map(dataset => dataset.data)
             };
 
             const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
