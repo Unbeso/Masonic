@@ -90,18 +90,6 @@
                     </tr>
                 </thead>
                 <tbody id="attendance-rows">
-                    <script>
-                        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                        months.forEach(month => {
-                            document.write(`
-                                <tr>
-                                    <td>${month}</td>
-                                    <td><input type="number" name="meeting1" placeholder="0" required></td>
-                                    <td><input type="number" name="meeting2" placeholder="0" required></td>
-                                </tr>
-                            `);
-                        });
-                    });
                 </tbody>
             </table>
             <button type="submit">Calculate Average</button>
@@ -111,6 +99,38 @@
     </div>
 
     <script>
+        // Dynamically populate the table with months and input fields
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const tableBody = document.getElementById('attendance-rows');
+
+        months.forEach(month => {
+            const row = document.createElement('tr');
+
+            const monthCell = document.createElement('td');
+            monthCell.textContent = month;
+            row.appendChild(monthCell);
+
+            const meeting1Cell = document.createElement('td');
+            const meeting1Input = document.createElement('input');
+            meeting1Input.type = 'number';
+            meeting1Input.name = 'meeting1';
+            meeting1Input.placeholder = '0';
+            meeting1Input.required = true;
+            meeting1Cell.appendChild(meeting1Input);
+            row.appendChild(meeting1Cell);
+
+            const meeting2Cell = document.createElement('td');
+            const meeting2Input = document.createElement('input');
+            meeting2Input.type = 'number';
+            meeting2Input.name = 'meeting2';
+            meeting2Input.placeholder = '0';
+            meeting2Input.required = true;
+            meeting2Cell.appendChild(meeting2Input);
+            row.appendChild(meeting2Cell);
+
+            tableBody.appendChild(row);
+        });
+
         const form = document.getElementById('attendance-form');
         const resultElement = document.getElementById('average-result');
 
@@ -149,7 +169,7 @@
 
         // Service Worker Registration for PWA
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+            navigator.serviceWorker.register('service-worker.js').then(function(registration) {
                 console.log('Service Worker registered with scope:', registration.scope);
             }).catch(function(error) {
                 console.log('Service Worker registration failed:', error);
