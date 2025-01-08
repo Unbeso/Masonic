@@ -122,7 +122,6 @@
         const yearStartSelect = document.getElementById('year-start');
         const yearEndSelect = document.getElementById('year-end');
         const exportButton = document.getElementById('export-data');
-        const chartContainer = document.getElementById('chart-container');
         const chartCanvas = document.getElementById('attendance-chart');
 
         let chartInstance;
@@ -204,15 +203,13 @@
                 table.appendChild(tbody);
                 yearTablesContainer.appendChild(table);
             });
+
+            calculateAverages(years);
         });
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-
+        function calculateAverages(years) {
             let overallTotals = {};
             let monthlyTotals = Array(12).fill(0);
-
-            const years = [...yearTablesContainer.querySelectorAll('h2')].map(h2 => parseInt(h2.textContent.replace('Year: ', '')));
 
             years.forEach(year => {
                 let total = 0;
@@ -225,9 +222,9 @@
                     const meeting2Input = document.querySelector(`input[name="meeting2-${year}"]`);
                     const specialEventInput = document.querySelector(`input[name="specialEvent-${year}"]`);
 
-                    const meeting1Value = parseInt(meeting1Input.value) || 0;
-                    const meeting2Value = parseInt(meeting2Input.value) || 0;
-                    const specialEventValue = parseInt(specialEventInput.value) || 0;
+                    const meeting1Value = parseInt(meeting1Input?.value) || 0;
+                    const meeting2Value = parseInt(meeting2Input?.value) || 0;
+                    const specialEventValue = parseInt(specialEventInput?.value) || 0;
 
                     total += meeting1Value + meeting2Value;
                     monthlyTotals[index] += meeting1Value + meeting2Value;
@@ -249,50 +246,3 @@
                 data: {
                     labels: months,
                     datasets: [{
-                        label: 'Monthly Attendance',
-                        data: monthlyTotals,
-                        borderColor: '#4CAF50',
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true
-                        }
-                    }
-                }
-            });
-
-            exportButton.style.display = 'block';
-
-            exportButton.addEventListener('click', () => {
-                const csvData = [
-                    ['Month', 'Attendance']
-                ];
-                months.forEach((month, index) => {
-                    csvData.push([month, monthlyTotals[index]]);
-                });
-                const csvContent = csvData.map(row => row.join(",")).join("\n");
-                const blob = new Blob([csvContent], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'attendance_data.csv';
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        });
-
-        // Service Worker Registration for PWA
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').then(function(registration) {
-                console.log('Service Worker registered with scope:', registration.scope);
-            }).catch(function(error) {
-                console.log('Service Worker registration failed:', error);
-            });
-        }
-    </script>
-</body>
-</html>
