@@ -100,7 +100,7 @@
 <body>
     <div class="container">
         <h1>Monthly Attendance Average Calculator</h1>
-        <p>Select year ranges to calculate and compare attendance averages for meetings and special events.</p>
+        <p>Select a year range to calculate attendance averages for meetings and special events.</p>
 
         <div class="year-selector">
             <div>
@@ -119,29 +119,6 @@
                 <select id="end-year" name="end-year">
                     <script>
                         for (let year = currentYear - 3; year <= currentYear + 3; year++) {
-                            document.write(`<option value="${year}">${year}</option>`);
-                        }
-                    </script>
-                </select>
-            </div>
-        </div>
-
-        <div class="year-selector">
-            <div>
-                <label for="compare-start-year">Select Comparison Start Year:</label>
-                <select id="compare-start-year" name="compare-start-year">
-                    <script>
-                        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
-                            document.write(`<option value="${year}">${year}</option>`);
-                        }
-                    </script>
-                </select>
-            </div>
-            <div>
-                <label for="compare-end-year">Select Comparison End Year:</label>
-                <select id="compare-end-year" name="compare-end-year">
-                    <script>
-                        for (let year = currentYear - 10; year <= currentYear + 10; year++) {
                             document.write(`<option value="${year}">${year}</option>`);
                         }
                     </script>
@@ -180,8 +157,6 @@
         const clearDataButton = document.getElementById('clear-data-button');
         const startYearSelect = document.getElementById('start-year');
         const endYearSelect = document.getElementById('end-year');
-        const compareStartYearSelect = document.getElementById('compare-start-year');
-        const compareEndYearSelect = document.getElementById('compare-end-year');
         let chartInstance;
 
         // Local Storage Functions
@@ -204,17 +179,13 @@
         nextButton.addEventListener('click', () => {
             const startYear = parseInt(startYearSelect.value);
             const endYear = parseInt(endYearSelect.value);
-            const compareStartYear = parseInt(compareStartYearSelect.value);
-            const compareEndYear = parseInt(compareEndYearSelect.value);
 
-            if (isNaN(startYear) || isNaN(endYear) || startYear > endYear || isNaN(compareStartYear) || isNaN(compareEndYear) || compareStartYear > compareEndYear) {
-                alert('Please select valid year ranges.');
+            if (isNaN(startYear) || isNaN(endYear) || startYear > endYear) {
+                alert('Please select a valid year range.');
                 return;
             }
 
             generateYearlyInputs(startYear, endYear);
-            generateYearlyInputs(compareStartYear, compareEndYear, true);
-
             nextButton.classList.add('hidden');
             attendanceForm.classList.remove('hidden');
 
@@ -225,14 +196,12 @@
             }
         });
 
-        function generateYearlyInputs(startYear, endYear, isComparison = false) {
-            const container = isComparison ? yearlyAttendance : yearlyAttendance;
-            const title = isComparison ? 'Comparison Year:' : 'Year:';
-
+        function generateYearlyInputs(startYear, endYear) {
+            yearlyAttendance.innerHTML = '';
             for (let year = startYear; year <= endYear; year++) {
                 const yearContainer = document.createElement('div');
                 yearContainer.classList.add('year-container');
-                yearContainer.innerHTML = `<h3>${title} ${year}</h3>`;
+                yearContainer.innerHTML = `<h3>Year: ${year}</h3>`;
 
                 const table = document.createElement('table');
                 table.innerHTML = `
@@ -259,7 +228,7 @@
                     const meeting1Input = document.createElement('input');
                     meeting1Input.type = 'number';
                     meeting1Input.inputMode = 'numeric';
-                    meeting1Input.name = `meeting1-${year}-${month}${isComparison ? '-compare' : ''}`;
+                    meeting1Input.name = `meeting1-${year}-${month}`;
                     meeting1Input.placeholder = '0';
                     meeting1Cell.appendChild(meeting1Input);
                     row.appendChild(meeting1Cell);
@@ -268,7 +237,7 @@
                     const meeting2Input = document.createElement('input');
                     meeting2Input.type = 'number';
                     meeting2Input.inputMode = 'numeric';
-                    meeting2Input.name = `meeting2-${year}-${month}${isComparison ? '-compare' : ''}`;
+                    meeting2Input.name = `meeting2-${year}-${month}`;
                     meeting2Input.placeholder = '0';
                     meeting2Cell.appendChild(meeting2Input);
                     row.appendChild(meeting2Cell);
@@ -277,7 +246,7 @@
                     const specialEventInput = document.createElement('input');
                     specialEventInput.type = 'number';
                     specialEventInput.inputMode = 'numeric';
-                    specialEventInput.name = `specialEvent-${year}-${month}${isComparison ? '-compare' : ''}`;
+                    specialEventInput.name = `specialEvent-${year}-${month}`;
                     specialEventInput.placeholder = '0';
                     specialEventCell.appendChild(specialEventInput);
                     row.appendChild(specialEventCell);
@@ -286,7 +255,7 @@
                     const pettyCashInput = document.createElement('input');
                     pettyCashInput.type = 'number';
                     pettyCashInput.inputMode = 'numeric';
-                    pettyCashInput.name = `pettyCash-${year}-${month}${isComparison ? '-compare' : ''}`;
+                    pettyCashInput.name = `pettyCash-${year}-${month}`;
                     pettyCashInput.placeholder = '0';
                     pettyCashCell.appendChild(pettyCashInput);
                     row.appendChild(pettyCashCell);
@@ -296,7 +265,7 @@
 
                 table.appendChild(tbody);
                 yearContainer.appendChild(table);
-                container.appendChild(yearContainer);
+                yearlyAttendance.appendChild(yearContainer);
             }
         }
 
